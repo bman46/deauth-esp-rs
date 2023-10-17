@@ -6,7 +6,8 @@ use esp_idf_svc::{
     nvs::EspDefaultNvsPartition,
     eventloop::EspSystemEventLoop,
 };
-use esp_idf_sys::{EspError, esp_wifi_80211_tx};
+
+use crate::wifi_bypass::send_freedom;
 
 mod wifi_bypass;
 
@@ -31,7 +32,7 @@ fn main() {
 
     let scan_results = wifi_driver.scan().unwrap();
     for ap in scan_results{
-        wifi_driver.driver_mut().send(WifiDeviceId::Ap, &frame_builder(ap.bssid)).unwrap();   
+        send_freedom(WifiDeviceId::Ap, &frame_builder(ap.bssid)).unwrap();
     }
 }
 
@@ -55,13 +56,4 @@ fn frame_builder(bssid: [u8; 6]) -> [u8; 26] {
 
     // return the frame:
     frame
-}
-
-/// As per [`esp_idf_sys::esp_wifi_internal_tx`](esp_idf_sys::esp_wifi_internal_tx)
-pub fn send_freedom(device_id: WifiDeviceId, frame: &[u8]) -> Result<(), EspError> {
-    use esp_idf_sys::esp;
-
-    esp!(unsafe {
-        esp_wifi_80211_tx(device_id.into(), frame.as_ptr() as *mut _, frame.len() as _, false)
-    })
 }
