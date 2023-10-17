@@ -7,9 +7,9 @@ use esp_idf_svc::{
     eventloop::EspSystemEventLoop,
 };
 
-use crate::wifi_bypass::send_freedom;
+use crate::wsl_bypasser::send_freedom;
 
-mod wifi_bypass;
+mod wsl_bypasser;
 
 fn main() {
     // It is necessary to call this function once. Otherwise some patches to the runtime
