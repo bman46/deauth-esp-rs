@@ -1,15 +1,18 @@
-use esp_idf_sys as _; // If using the `binstart` feature of `esp-idf-sys`, always keep this module imported
+use embedded_svc::wifi::{Configuration, ClientConfiguration, AccessPointConfiguration, AuthMethod};
+use esp_idf_sys::{self as _}; // If using the `binstart` feature of `esp-idf-sys`, always keep this module imported
 use log::*;
 use esp_idf_hal::peripherals::Peripherals;
 use esp_idf_svc::{
-    wifi::{EspWifi, WifiDeviceId},
+    wifi::{EspWifi, BlockingWifi},
     nvs::EspDefaultNvsPartition,
     eventloop::EspSystemEventLoop,
 };
 
-use crate::wsl_bypasser::{send_freedom, frame_builder};
+use crate::http_server::start_http_server;
 
 mod wsl_bypasser;
+mod wifi_deauth;
+mod http_server;
 
 fn main() {
     // It is necessary to call this function once. Otherwise some patches to the runtime
@@ -24,14 +27,33 @@ fn main() {
     let sys_loop = EspSystemEventLoop::take().unwrap();
     let nvs = EspDefaultNvsPartition::take().unwrap();
     
-    let mut wifi_driver = EspWifi::new(
-        peripherals.modem,
+    let mut wifi = BlockingWifi::wrap(
+        EspWifi::new(peripherals.modem, sys_loop.clone(), Some(nvs)).unwrap(),
         sys_loop,
-        Some(nvs)
     ).unwrap();
 
-    let scan_results = wifi_driver.scan().unwrap();
+    let wifi_config = Configuration::Mixed(
+        ClientConfiguration{
+            ..Default::default()
+        }, 
+        AccessPointConfiguration{
+            ssid: "Tool MGMT".into(),
+            password: "password123".into(),
+            auth_method: AuthMethod::WPA2Personal,
+            ..Default::default()
+        }
+    );
+
+    wifi.set_configuration(&wifi_config).unwrap();
+
+    wifi.start().unwrap();
+
+    info!("Pre scan...");
+
     for ap in scan_results{
-        send_freedom(WifiDeviceId::Ap, &frame_builder(ap.bssid)).unwrap();
+        // Output scan info:
+        info!("AP info: {}, chan: {}", ap.ssid, ap.channel);   
     }
+
+    start_http_server(&wifi);
 }
