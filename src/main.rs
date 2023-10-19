@@ -48,12 +48,5 @@ fn main() {
 
     wifi.start().unwrap();
 
-    info!("Pre scan...");
-
-    for ap in scan_results{
-        // Output scan info:
-        info!("AP info: {}, chan: {}", ap.ssid, ap.channel);   
-    }
-
     start_http_server(&wifi);
 }

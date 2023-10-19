@@ -7,21 +7,21 @@ pub fn templated_html(title: impl AsRef<str> ,content: impl AsRef<str>) -> Strin
         <meta charset="utf-8">
         <title>{}</title>
         <style>
-            table {
+            table {{
             font-family: arial, sans-serif;
             border-collapse: collapse;
             width: 100%;
-            }
+            }}
 
-            td, th {
+            td, th {{
             border: 1px solid #dddddd;
             text-align: left;
             padding: 8px;
-            }
+            }}
 
-            tr:nth-child(even) {
+            tr:nth-child(even) {{
             background-color: #dddddd;
-            }
+            }}
         </style>
     </head>
     <body>

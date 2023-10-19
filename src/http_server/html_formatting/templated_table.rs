@@ -1,9 +1,9 @@
-pub fn templated_table(values: Vec<String>, columns: i32) -> Result<String, String>{
+pub fn templated_table(values: Vec<&str>, columns: i32) -> Result<String, String>{
     let mut html_code = "<table>".to_string();
     let mut header = true;
 
     for row in 0..(values.len() / columns as usize){
-        let result = row_builder((row*columns as usize), columns as usize, header, &values);
+        let result = row_builder((row*columns as usize), columns as usize, header, values);
         match result {
             Ok(str) => {
                 html_code.push_str(&str);
@@ -14,11 +14,11 @@ pub fn templated_table(values: Vec<String>, columns: i32) -> Result<String, Stri
         }
     }
     html_code.push_str("</table>");
-    
+
     return Ok(html_code);
 }
 
-fn row_builder(start: usize, col_length: usize, header: bool, values: &Vec<String>) -> Result<String, String>{
+fn row_builder(start: usize, col_length: usize, header: bool, values: Vec<&str>) -> Result<String, String>{
     let mut html_code = "<tr>".to_string();
 
     let mut cell_html = "tr";
