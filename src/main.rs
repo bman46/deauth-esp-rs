@@ -1,3 +1,5 @@
+use std::sync::Mutex;
+
 use embedded_svc::wifi::{Configuration, ClientConfiguration, AccessPointConfiguration, AuthMethod};
 use esp_idf_sys::{self as _}; // If using the `binstart` feature of `esp-idf-sys`, always keep this module imported
 use log::*;
@@ -7,12 +9,26 @@ use esp_idf_svc::{
     nvs::EspDefaultNvsPartition,
     eventloop::EspSystemEventLoop,
 };
+use once_cell::sync::Lazy;
 
 use crate::http_server::start_http_server;
 
 mod wsl_bypasser;
 mod wifi_deauth;
 mod http_server;
+
+static WIFI: Lazy<Mutex<BlockingWifi<EspWifi<'_>>>> = Lazy::new(|| {
+    let peripherals = Peripherals::take().unwrap();
+    let sys_loop = EspSystemEventLoop::take().unwrap();
+    let nvs = EspDefaultNvsPartition::take().unwrap();
+    
+    let mut wifi: BlockingWifi<EspWifi<'_>> = BlockingWifi::wrap(
+        EspWifi::new(peripherals.modem, sys_loop.clone(), Some(nvs)).unwrap(),
+        sys_loop,
+    ).unwrap();
+
+    Mutex::new(wifi)
+});
 
 fn main() {
     // It is necessary to call this function once. Otherwise some patches to the runtime
@@ -22,15 +38,6 @@ fn main() {
     esp_idf_svc::log::EspLogger::initialize_default();
 
     info!("Starting...");
-
-    let peripherals = Peripherals::take().unwrap();
-    let sys_loop = EspSystemEventLoop::take().unwrap();
-    let nvs = EspDefaultNvsPartition::take().unwrap();
-    
-    let mut wifi = BlockingWifi::wrap(
-        EspWifi::new(peripherals.modem, sys_loop.clone(), Some(nvs)).unwrap(),
-        sys_loop,
-    ).unwrap();
 
     let wifi_config = Configuration::Mixed(
         ClientConfiguration{
@@ -44,9 +51,9 @@ fn main() {
         }
     );
 
-    wifi.set_configuration(&wifi_config).unwrap();
+    WIFI.lock().unwrap().set_configuration(&wifi_config).unwrap();
 
-    wifi.start().unwrap();
+    WIFI.lock().unwrap().start().unwrap();
 
-    start_http_server(&wifi);
+    start_http_server();
 }

@@ -1,14 +1,14 @@
 use std::{thread::sleep, time::Duration};
 
 use embedded_svc::{http::Method, io::Write};
-use esp_idf_svc::{http::{server::EspHttpServer, server::Configuration}, wifi::{BlockingWifi, EspWifi}};
+use esp_idf_svc::http::{server::EspHttpServer, server::Configuration};
 
 use self::html_formatting::{templated_html::templated_html, templated_table};
-use crate::http_server::templated_table::templated_table;
+use crate::{http_server::templated_table::templated_table, WIFI};
 
 mod html_formatting;
 
-pub fn start_http_server(wifi: &BlockingWifi<EspWifi<'_>>){
+pub fn start_http_server(){
     // Set the HTTP server
     let mut server = EspHttpServer::new(&Configuration{
         ..Default::default()
@@ -23,14 +23,14 @@ pub fn start_http_server(wifi: &BlockingWifi<EspWifi<'_>>){
 
     server.fn_handler("/scan", Method::Get, |request| {
 
-        let scan_result = wifi.scan();
+        let scan_result = WIFI.lock().unwrap().scan();
         let mut contents = "".to_owned();
         match scan_result {
             Ok(aps) => {
-                let mut vec1 = vec!["SSID", "Channel"];
+                let mut vec1 = vec!["SSID".to_string(), "Channel".to_string()];
                 for ap in aps{
-                    vec1.push(&ap.ssid);
-                    vec1.push(&ap.channel.to_string());
+                    vec1.push(ap.ssid.to_string());
+                    vec1.push(ap.channel.to_string());
                 }
                 let table_res = templated_table(vec1, 2);
                 match table_res{
