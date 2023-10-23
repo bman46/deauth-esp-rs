@@ -22,17 +22,17 @@ pub fn start_http_server(){
     }).unwrap();
 
     server.fn_handler("/scan", Method::Get, |request| {
-
         let scan_result = WIFI.lock().unwrap().scan();
         let mut contents = "".to_owned();
         match scan_result {
             Ok(aps) => {
-                let mut vec1 = vec!["SSID".to_string(), "Channel".to_string()];
+                let mut vec1 = vec!["SSID".to_string(), "Channel".to_string(), "BSSID".to_string()];
                 for ap in aps{
                     vec1.push(ap.ssid.to_string());
                     vec1.push(ap.channel.to_string());
+                    vec1.push(format!("{:02X?}", ap.bssid));
                 }
-                let table_res = templated_table(vec1, 2);
+                let table_res = templated_table(vec1, 3);
                 match table_res{
                     Ok(str) => {
                         contents.push_str("<h1>Scan Results</h1>");
