@@ -74,7 +74,7 @@ pub fn start_http_server(){
                 if !channel.eq(&config.as_mixed_conf_mut().1.channel)
                 {
                     let html = templated_html("Deauth Result", "Changing channels...");
-                    let mut response = request.into_status_response(200)?;
+                    let mut response = request.into_status_response(205)?;
                     response.write_all(html.as_bytes())?;
 
                     config.as_mixed_conf_mut().1.channel = channel.to_owned();
@@ -114,7 +114,7 @@ pub fn start_http_server(){
             }
         }
 
-        let html = templated_html("Deauth Result", format!("Chan: {}, Mac: {}", chan.unwrap(), format_mac(mac_result.unwrap(), true)));
+        let html = templated_html("Deauth Result", format!("Deauth sent!<br />Chan: {}, Mac: {}", chan.unwrap(), format_mac(mac_result.unwrap(), true)));
         let mut response = request.into_ok_response()?;
         response.write_all(html.as_bytes())?;
 
