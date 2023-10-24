@@ -16,13 +16,14 @@ use crate::http_server::start_http_server;
 mod wsl_bypasser;
 mod wifi_deauth;
 mod http_server;
+mod mac;
 
 static WIFI: Lazy<Mutex<BlockingWifi<EspWifi<'_>>>> = Lazy::new(|| {
     let peripherals = Peripherals::take().unwrap();
     let sys_loop = EspSystemEventLoop::take().unwrap();
     let nvs = EspDefaultNvsPartition::take().unwrap();
     
-    let mut wifi: BlockingWifi<EspWifi<'_>> = BlockingWifi::wrap(
+    let wifi: BlockingWifi<EspWifi<'_>> = BlockingWifi::wrap(
         EspWifi::new(peripherals.modem, sys_loop.clone(), Some(nvs)).unwrap(),
         sys_loop,
     ).unwrap();

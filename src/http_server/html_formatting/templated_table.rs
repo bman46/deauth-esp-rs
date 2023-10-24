@@ -3,7 +3,7 @@ pub fn templated_table(values: Vec<String>, columns: i32) -> Result<String, Stri
     let mut header = true;
 
     for row in 0..(values.len() / columns as usize){
-        let result = row_builder((row*columns as usize), columns as usize, header, &values);
+        let result = row_builder(row*columns as usize, columns as usize, header, &values);
         match result {
             Ok(str) => {
                 html_code.push_str(&str);
