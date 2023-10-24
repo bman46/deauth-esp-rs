@@ -1,5 +1,3 @@
-use log::info;
-
 pub fn format_mac(mac: [u8; 6], use_colon: bool) -> String{
     let mut mac_string = "".to_string();
     for segment in mac
@@ -14,8 +12,6 @@ pub fn format_mac(mac: [u8; 6], use_colon: bool) -> String{
     {
         mac_string.pop();
     }
-
-    info!("MAC: {}, formatted: {}", hex::encode(mac), mac_string);
 
     return mac_string;
 }

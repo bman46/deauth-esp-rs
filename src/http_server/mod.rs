@@ -2,7 +2,6 @@ use std::{thread::sleep, time::Duration, collections::HashMap};
 
 use embedded_svc::{http::{Method, server::HandlerError}, io::Write};
 use esp_idf_svc::http::{server::EspHttpServer, server::Configuration};
-use log::info;
 use url::Url;
 
 use self::html_formatting::{templated_html::templated_html, templated_table, templated_link::templated_link};
@@ -66,15 +65,25 @@ pub fn start_http_server(){
         let url = Url::parse(&format!("http://localhost{}",request.uri())).unwrap();
         let params: HashMap<_, _> = url.query_pairs().into_owned().collect();
 
-        info!("Chan: {}", params.get("chan").unwrap().parse::<u8>().unwrap());
-
         let chan = params.get("chan").unwrap().parse::<u8>();
         let mac_result =  decode_mac(params.get("bssid").unwrap());
 
         let mut config = WIFI.lock().unwrap().get_configuration().unwrap();
         match chan {
-            Ok(chan) => {
-                config.as_mixed_conf_mut().0.channel = Some(chan.to_owned());
+            Ok(channel) => {
+                if !channel.eq(&config.as_mixed_conf_mut().1.channel)
+                {
+                    let html = templated_html("Deauth Result", "Changing channels...");
+                    let mut response = request.into_status_response(200)?;
+                    response.write_all(html.as_bytes())?;
+
+                    config.as_mixed_conf_mut().1.channel = channel.to_owned();
+
+                    WIFI.lock().unwrap().set_configuration(&config).unwrap();
+                    let _ = WIFI.lock().unwrap().connect();
+
+                    return Ok(());
+                }
             },
             Err(_) => {
                 let html = templated_html("Deauth Result", "Failed to process the channel variable.");
@@ -84,8 +93,6 @@ pub fn start_http_server(){
                 return Err(HandlerError::new("Failed to process channel."));
             }
         }
-
-        WIFI.lock().unwrap().set_configuration(&config).unwrap();
 
         match mac_result {
             Ok(mac) =>{
