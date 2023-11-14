@@ -17,6 +17,7 @@ mod wsl_bypasser;
 mod wifi_deauth;
 mod http_server;
 mod mac;
+mod beacon;
 
 static WIFI: Lazy<Mutex<BlockingWifi<EspWifi<'_>>>> = Lazy::new(|| {
     let peripherals = Peripherals::take().unwrap();

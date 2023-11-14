@@ -1,20 +1,9 @@
-use esp_idf_svc::wifi::WifiDeviceId;
 
-use crate::wsl_bypasser::send_freedom;
-
-pub fn deauth(bssid: [u8; 6]) -> Result<(), String>{
-    let send_result = send_freedom(WifiDeviceId::Sta, &deauth_frame_builder(bssid));
-
-    // Catch errors:
-    if let Err(error) = send_result {
-        let error = format!("Error sending frame: {}", error);
-        return Err(error);
-    }
+pub fn beacon(){
     
-    Ok(())
 }
 
-fn deauth_frame_builder(bssid: [u8; 6]) -> [u8; 26] {
+fn beacon_frame_builder(bssid: [u8; 6]) -> [u8; 26] {
     let mut frame: [u8; 26] = [
         /*  0 - 1  */ 0xC0, 0x00,                         // type, subtype c0: deauth (a0: disassociate)
         /*  2 - 3  */ 0x00, 0x00,                         // duration (SDK takes care of that)
